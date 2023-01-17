@@ -15,67 +15,98 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
-      home: const MyHomePage(title: 'My ToDo'),
+      home: MyHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key, required this.title});
+class MyHomePage extends StatefulWidget {
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
 
-  final String title;
+class _MyHomePageState extends State<MyHomePage> {
+  var currentProject = "Root";
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(currentProject),
       ),
       body: Center(
         child: Container(
           color: Theme.of(context).colorScheme.primaryContainer,
-          child: ActionList(),
+          child: ItemList(),
         ),
       ),
     );
   }
 }
 
-class ActionList extends StatefulWidget {
+class ItemList extends StatefulWidget {
   @override
-  State<ActionList> createState() => _ActionListState();
+  State<ItemList> createState() => _ItemListState();
 }
 
-class _ActionListState extends State<ActionList> {
-  var actionItems = [];
+class _ItemListState extends State<ItemList> {
+  var actionsList = [];
+  var projectsList = [];
 
   void onChanged(value) {}
   void _addAction(value) {
     setState(() {
-      actionItems.add(value);
+      actionsList.add(value);
     });
+  }
+
+  _addProject(value) {
+    setState(() {
+      // actionsList.removeWhere((item) => item == value);
+      projectsList.add(value);
+    });
+  }
+
+  Widget _getCheckboxTile(type, item, theme) {
+    var style = theme.textTheme.bodyText1!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    );
+    if (type == "action") {
+      return GestureDetector(
+        onDoubleTap: _addProject(item),
+        child: CheckboxListTile(
+          title: Text(
+            item,
+            style: style,
+          ),
+          tileColor: theme.colorScheme.primary,
+          value: false,
+          onChanged: onChanged,
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+      );
+    } else {
+      return CheckboxListTile(
+        title: Text(
+          item,
+          style: style,
+        ),
+        tileColor: theme.secondaryHeaderColor,
+        value: false,
+        onChanged: onChanged,
+        controlAffinity: ListTileControlAffinity.leading,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
-    var style = theme.textTheme.bodyText1!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
 
     return ListView(
       children: [
-        for (var action in actionItems)
-          CheckboxListTile(
-            title: Text(
-              action,
-              style: style,
-            ),
-            tileColor: theme.colorScheme.primary,
-            value: false,
-            onChanged: onChanged,
-            controlAffinity: ListTileControlAffinity.leading,
-          ),
+        for (var item in actionsList) _getCheckboxTile("action", item, theme),
+        for (var item in projectsList) _getCheckboxTile("project", item, theme),
         CheckboxListTile(
           title: TextFormField(
             decoration: const InputDecoration(
