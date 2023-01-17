@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+var appData = {
+  "root": {
+    "actions": ["buy lap", "see video"],
+    "projects": ["get out"]
+  },
+  "get out": {
+    "actions": ["resume", "notice"],
+    "projects": ["kb4 project"]
+  },
+};
+
 void main() {
   runApp(const MyApp());
 }
@@ -18,7 +29,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.orange,
         ),
-        home: MyHomePage(),
+        home: const MyHomePage(),
       ),
     );
   }
@@ -34,9 +45,11 @@ class MyAppState extends ChangeNotifier {
 }
 
 class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
+    final appState = Provider.of<MyAppState>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(appState.currentProj),
@@ -44,7 +57,7 @@ class MyHomePage extends StatelessWidget {
       body: Center(
         child: Container(
           // color: Theme.of(context).colorScheme.primaryContainer,
-          child: ItemList(),
+          child: const ItemList(),
         ),
       ),
     );
@@ -52,6 +65,8 @@ class MyHomePage extends StatelessWidget {
 }
 
 class ItemList extends StatefulWidget {
+  const ItemList({super.key});
+
   @override
   State<ItemList> createState() => _ItemListState();
 }
@@ -81,12 +96,12 @@ class _ItemListState extends State<ItemList> {
       color: theme.colorScheme.onPrimary,
     );
     var appState = context.watch<MyAppState>();
+    var currentProj = appState.currentProj;
+    actionsList = appData[currentProj]!["actions"]!;
+    projectsList = appData[currentProj]!["projects"]!;
 
     Widget getCheckboxTile(type, item) {
-      var style = theme.textTheme.bodyText1!.copyWith(
-        color: theme.colorScheme.onPrimary,
-      );
-      var proj_style = theme.textTheme.bodyLarge!.copyWith(
+      var projStyle = theme.textTheme.bodyLarge!.copyWith(
         color: theme.colorScheme.onPrimary,
       );
       if (type == "action") {
@@ -105,11 +120,11 @@ class _ItemListState extends State<ItemList> {
         );
       } else if (type == "project") {
         return GestureDetector(
-          onTap: () => appState.changeCurrProject(item),
+          onDoubleTap: () => appState.changeCurrProject(item),
           child: CheckboxListTile(
             title: Text(
               item,
-              style: proj_style,
+              style: projStyle,
             ),
             tileColor: Colors.purple,
             value: false,
