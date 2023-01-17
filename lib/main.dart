@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,33 +11,39 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'No bullshit ToDo',
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
+    return ChangeNotifierProvider(
+      create: (context) => MyAppState(),
+      child: MaterialApp(
+        title: 'No bullshit ToDo',
+        theme: ThemeData(
+          primarySwatch: Colors.orange,
+        ),
+        home: MyHomePage(),
       ),
-      home: MyHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
+class MyAppState extends ChangeNotifier {
+  var currentProj = "root";
+
+  void changeCurrProject(newProj) {
+    currentProj = newProj;
+    notifyListeners();
+  }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  var currentProject = "Root";
-
+class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
     return Scaffold(
       appBar: AppBar(
-        title: Text(currentProject),
+        title: Text(appState.currentProj),
       ),
       body: Center(
         child: Container(
-          color: Theme.of(context).colorScheme.primaryContainer,
+          // color: Theme.of(context).colorScheme.primaryContainer,
           child: ItemList(),
         ),
       ),
@@ -60,53 +67,65 @@ class _ItemListState extends State<ItemList> {
     });
   }
 
-  _addProject(value) {
+  void _addProject(value) {
     setState(() {
-      // actionsList.removeWhere((item) => item == value);
+      actionsList.removeWhere((item) => item == value);
       projectsList.add(value);
     });
-  }
-
-  Widget _getCheckboxTile(type, item, theme) {
-    var style = theme.textTheme.bodyText1!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-    if (type == "action") {
-      return GestureDetector(
-        onDoubleTap: _addProject(item),
-        child: CheckboxListTile(
-          title: Text(
-            item,
-            style: style,
-          ),
-          tileColor: theme.colorScheme.primary,
-          value: false,
-          onChanged: onChanged,
-          controlAffinity: ListTileControlAffinity.leading,
-        ),
-      );
-    } else {
-      return CheckboxListTile(
-        title: Text(
-          item,
-          style: style,
-        ),
-        tileColor: theme.secondaryHeaderColor,
-        value: false,
-        onChanged: onChanged,
-        controlAffinity: ListTileControlAffinity.leading,
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
+    var style = theme.textTheme.bodyLarge!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    );
+    var appState = context.watch<MyAppState>();
+
+    Widget getCheckboxTile(type, item) {
+      var style = theme.textTheme.bodyText1!.copyWith(
+        color: theme.colorScheme.onPrimary,
+      );
+      var proj_style = theme.textTheme.bodyLarge!.copyWith(
+        color: theme.colorScheme.onPrimary,
+      );
+      if (type == "action") {
+        return GestureDetector(
+          onDoubleTap: () => _addProject(item),
+          child: CheckboxListTile(
+            title: Text(
+              item,
+              style: style,
+            ),
+            tileColor: Colors.blue,
+            value: false,
+            onChanged: onChanged,
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+        );
+      } else if (type == "project") {
+        return GestureDetector(
+          onTap: () => appState.changeCurrProject(item),
+          child: CheckboxListTile(
+            title: Text(
+              item,
+              style: proj_style,
+            ),
+            tileColor: Colors.purple,
+            value: false,
+            onChanged: onChanged,
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+        );
+      } else {
+        return const Text("hello");
+      }
+    }
 
     return ListView(
       children: [
-        for (var item in actionsList) _getCheckboxTile("action", item, theme),
-        for (var item in projectsList) _getCheckboxTile("project", item, theme),
+        for (var item in actionsList) getCheckboxTile("action", item),
+        for (var item in projectsList) getCheckboxTile("project", item),
         CheckboxListTile(
           title: TextFormField(
             decoration: const InputDecoration(
